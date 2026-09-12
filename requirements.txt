@@ -1,0 +1,18 @@
+# Core local inference path
+torch>=2.4
+torchvision>=0.19
+transformers>=4.51
+accelerate>=0.34
+safetensors>=0.4.3
+huggingface_hub>=0.25
+pillow>=10.3
+numpy>=1.26
+
+# Utilities
+psutil>=5.9
+rich>=13.7
+typer>=0.12
+
+# Optional extras (screen capture / UI / Apple-silicon speed)
+mss>=9.0
+gradio>=4.44

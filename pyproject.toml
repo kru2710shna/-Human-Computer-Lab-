@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glance"
+version = "0.1.0"
+description = "Fully-local screenshot understanding and UI grounding under a 6B parameter budget"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "transformers>=4.51",
+    "accelerate>=0.34",
+    "pillow>=10.3",
+    "numpy>=1.26",
+    "psutil>=5.9",
+    "rich>=13.7",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+capture = ["mss>=9.0"]
+ui = ["gradio>=4.44"]
+mlx = ["mlx-vlm>=0.1.12"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+glance = "glance.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["glance*"]
