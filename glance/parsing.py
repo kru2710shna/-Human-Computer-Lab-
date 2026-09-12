@@ -25,10 +25,11 @@ LABEL_KEYS = ("label", "name", "description", "type", "target")
 def extract_json(text: str) -> Any | None:
     """Best-effort JSON extraction. Returns None when nothing parses.
 
-    The tricky case is a list truncated by the token cap. `raw_decode` on
-    '[{...}, {...' parses only the FIRST element and returns it as a bare dict,
-    silently discarding every later complete object. So whenever the source
-    looked like a list but we got a single object back, prefer the salvage scan.
+    The tricky case is a list truncated by the token cap. On '[{...}, {...' the
+    opening '[' fails to decode because the list is unterminated, so the scan
+    moves to the first '{' and returns that single object -- silently discarding
+    every later complete entry. So we check whether the source *opened* a list,
+    not which character happened to parse successfully.
     """
     if not text:
         return None
@@ -40,6 +41,7 @@ def extract_json(text: str) -> Any | None:
             return json.loads(cand)
         except json.JSONDecodeError:
             pass
+        opened_list = cand.lstrip().startswith("[")
         for i, ch in enumerate(cand):
             if ch not in "[{":
                 continue
@@ -47,8 +49,8 @@ def extract_json(text: str) -> Any | None:
                 val = dec.raw_decode(cand[i:])[0]
             except json.JSONDecodeError:
                 continue
-            if isinstance(val, dict) and ch == "[":
-                # Opened a list, got one object: the list was cut short.
+            if opened_list and isinstance(val, dict):
+                # A list was cut short: recover every complete object in it.
                 return _salvage_objects(cand)
             return val
     return _salvage_objects(text) or None
@@ -96,7 +98,7 @@ def _nums(v: Any, n: int) -> list[float] | None:
         v = re.findall(_NUM, v)
     if not isinstance(v, (list, tuple)):
         return None
-    # Flatten [[x1,y1],[x2,y2]] before the length check -- otherwise a nested
+    # Flatten [[x1,y1],[x2,y2]] BEFORE the length check -- otherwise a nested
     # box has len 2, fails the n==4 test, and gets misread as a point.
     if (n == 4 and len(v) == 2
             and all(isinstance(p, (list, tuple)) and len(p) == 2 for p in v)):
@@ -145,7 +147,8 @@ def parse_boxes(text: str) -> list[dict]:
     if not out:
         for m in _PAIR.finditer(text or ""):
             x, y = (float(g) for g in m.groups())
-            out.append({"box": (x - 1, y - 1, x + 1, y + 1), "label": "", "text": "", "point": True})
+            out.append({"box": (x - 1, y - 1, x + 1, y + 1),
+                        "label": "", "text": "", "point": True})
     return out
 
 
