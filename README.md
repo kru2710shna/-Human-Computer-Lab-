@@ -7,6 +7,10 @@ including exact pixel coordinates you could click. Nothing leaves the machine.
 Built for the Human Computer Lab challenge, Text-and-Vision track.
 
 ---
+**[See it working without installing anything →](docs/demo/index.html)**
+(open the raw file, or enable GitHub Pages on `/docs`)
+
+---
 
 ## The constraint, answered first
 
