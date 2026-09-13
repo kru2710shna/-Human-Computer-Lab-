@@ -7,8 +7,12 @@ including exact pixel coordinates you could click. Nothing leaves the machine.
 Built for the Human Computer Lab challenge, Text-and-Vision track.
 
 ---
-**[See it working without installing anything →](docs/demo/index.html)**
-(open the raw file, or enable GitHub Pages on `/docs`)
+
+## [See it working →](https://kru2710shna.github.io/-Human-Computer-Lab-/demo/)
+
+Real model outputs on real screenshots: the zoom-refine comparison, grounding
+with click points, OCR, task plans, and the system declining to locate an element
+that is not there. Nothing to install, no weights to download.
 
 ---
 
