@@ -150,3 +150,45 @@ def run(n: int = 24, model: str = "qwen2.5-vl-3b", backend: str = "auto",
     print("=" * 78)
     print(f"\nwrote {path}")
     return payload
+
+DISTRACTORS = [
+    "the Print button", "the Export to PDF button", "the Undo button",
+    "the search box in the toolbar", "the user avatar in the top right",
+    "the notification bell icon", "the zoom slider",
+]
+
+
+def run_distractors(engine: Engine, records: list[dict], n_per_screen: int = 1,
+                    seed: int = 0) -> dict:
+    """Ask for elements that are NOT on screen and check we return nothing.
+
+    Without this the benchmark cannot distinguish a system that grounds well from
+    one that always emits a plausible box. A false positive is worse than a miss:
+    a miss stops the workflow, a false positive clicks the wrong thing.
+    """
+    rng = random.Random(seed + 977)
+    rows = []
+    for rec in records:
+        present = {e["text"].lower() for e in rec["all_elements"]}
+        pool = [d for d in DISTRACTORS
+                if not any(w in present for w in d.lower().split() if len(w) > 3)]
+        if not pool:
+            continue
+        for target in rng.sample(pool, k=min(n_per_screen, len(pool))):
+            hit = engine.ground(rec["_image"], target, refine=False, verify=True)
+            acted = bool(hit and (hit.confidence is None
+                                  or hit.confidence >= engine.cfg.accept_threshold))
+            rows.append({"screen": rec["id"], "target": target,
+                         "returned_box": hit is not None,
+                         "would_act": acted,
+                         "confidence": hit.confidence if hit else None})
+            print(f"  [absent] {rec['id']:3d} {target[:36]:36s} "
+                  f"{'FALSE POSITIVE' if acted else 'correctly declined'}", flush=True)
+    n = len(rows)
+    return {
+        "n": n,
+        "returned_a_box": sum(r["returned_box"] for r in rows),
+        "would_act_on_it": sum(r["would_act"] for r in rows),
+        "correct_rejection_rate": round(1 - sum(r["would_act"] for r in rows) / n, 4) if n else 0.0,
+        "rows": rows,
+    }
