@@ -22,3 +22,5 @@ assets/generated/
 !assets/samples/
 # build metadata
 *.egg-info/
+
+!docs/demo/index.html
